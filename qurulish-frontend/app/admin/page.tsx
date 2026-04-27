@@ -29,16 +29,6 @@ export default function AdminPage() {
         checkAuth();
     }, [router]);
 
-    const handleLogout = async () => {
-        try {
-            await api.post("/auth/logout");
-            toast.success("Tizimdan chiqildi");
-            router.push("/login");
-        } catch (error) {
-            toast.error("Chiqishda xatolik yuz berdi");
-        }
-    };
-
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const filesArray = Array.from(e.target.files).map((file) => ({
@@ -85,20 +75,12 @@ export default function AdminPage() {
                 setBlogId(response.data.data.id);
                 toast.success("Muvaffaqiyatli saqlandi!", { id: loadingToast });
                 setTitle("");
+                setMainDescription("");
                 setImageItems([]);
             }
         } catch (error: any) {
-            if (
-                error.response?.status === 401 ||
-                error.response?.status === 403
-            ) {
-                toast.error("Sizga ruxsat berilmagan!", { id: loadingToast });
-                router.push("/login");
-            } else {
-                const msg =
-                    error.response?.data?.message || "Serverda xatolik!";
-                toast.error(msg, { id: loadingToast });
-            }
+            const msg = error.response?.data?.message || "Serverda xatolik!";
+            toast.error(msg, { id: loadingToast });
         }
     };
 
@@ -109,10 +91,10 @@ export default function AdminPage() {
             <div className="w-full max-w-2xl flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold">Yangi Ob'ekt Qo'shish</h1>
                 <button
-                    onClick={handleLogout}
-                    className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 transition"
+                    onClick={() => router.push("/admin/blogs")}
+                    className="bg-gray-800 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-900 transition"
                 >
-                    Chiqish
+                    Hamma bloglar
                 </button>
             </div>
 
@@ -131,7 +113,18 @@ export default function AdminPage() {
                         required
                     />
                 </div>
-
+                <div className="mb-4">
+                    <label className="font-semibold">
+                        Umumiy tavsif (Description)
+                    </label>
+                    <textarea
+                        rows={3}
+                        className="w-full border p-3 rounded-lg mt-1 bg-gray-50 text-black outline-none focus:border-blue-500"
+                        placeholder="Ob'ekt haqida batafsil ma'lumot kiriting..."
+                        value={mainDescription}
+                        onChange={(e) => setMainDescription(e.target.value)}
+                    />
+                </div>
                 <div className="mb-6">
                     <label className="font-semibold">Rasmlar yuklash</label>
                     <input
@@ -142,7 +135,6 @@ export default function AdminPage() {
                         accept="image/*"
                     />
                 </div>
-
                 <div className="space-y-4 mb-6">
                     {imageItems.map((item, index) => (
                         <div
@@ -157,7 +149,7 @@ export default function AdminPage() {
                             <div className="flex-1">
                                 <input
                                     type="text"
-                                    placeholder="Ushbu rasmga izoh"
+                                    placeholder="Ushbu rasmga izoh (masalan: Oshxona chirog'i)"
                                     className="w-full border p-2 rounded text-sm bg-white text-black"
                                     value={item.description}
                                     onChange={(e) =>
@@ -189,30 +181,20 @@ export default function AdminPage() {
             {qrCode && (
                 <div className="mt-8 p-6 bg-white rounded-xl shadow-xl text-center border-2 border-green-500 w-full max-w-md">
                     <h2 className="font-bold mb-4 text-black text-xl">
-                        Tayyor QR Kod va ID
+                        Tayyor QR Kod
                     </h2>
                     <img
                         src={qrCode}
                         className="mx-auto w-48 h-48 border p-2 rounded-lg"
                         alt="QR"
                     />
-                    <div className="mt-4 p-3 bg-gray-100 rounded-lg border border-dashed border-blue-400">
+                    <div className="mt-4 p-3 bg-gray-100 rounded-lg border border-dashed border-blue-400 text-center">
                         <p className="text-xs text-gray-500 uppercase font-bold mb-1">
-                            Ob'ekt ID raqami:
+                            Ob'ekt ID:
                         </p>
-                        <code className="text-lg font-mono text-blue-700 break-all select-all cursor-pointer">
+                        <code className="text-lg font-mono text-blue-700">
                             {blogId}
                         </code>
-                    </div>
-
-                    <div className="flex gap-2 mt-4">
-                        <a
-                            href={qrCode}
-                            download={`qr-${blogId}.png`}
-                            className="flex-1 bg-green-500 text-white py-2 rounded-lg font-bold hover:bg-green-600 transition"
-                        >
-                            QR Yuklab olish
-                        </a>
                     </div>
                 </div>
             )}

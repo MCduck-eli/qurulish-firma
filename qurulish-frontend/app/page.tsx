@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import HeroSection from "./components/hero-section";
 import { useSettings } from "./context/settings-context";
 
@@ -19,111 +19,109 @@ export default function Page() {
     const cols = 20;
     const cellSize = 1000 / rows;
 
+    const energyPaths = useMemo(() => {
+        const paths = [];
+        const rowIndices = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19];
+        const colIndices = [2, 4, 6, 8, 10, 12, 14, 16, 18];
+
+        for (const rowIdx of rowIndices) {
+            for (const colIdx of colIndices) {
+                if (Math.random() > 0.5) continue;
+                paths.push({
+                    id: `${rowIdx}-${colIdx}`,
+                    x: colIdx * cellSize,
+                    y: rowIdx * cellSize,
+                    duration: 3 + Math.random() * 4,
+                    delay: Math.random() * -10,
+                });
+            }
+        }
+        return paths;
+    }, [cellSize]);
+
     return (
         <div
             style={{ backgroundColor: bgColor }}
-            className="relative min-h-screen w-full overflow-hidden transition-colors duration-700"
+            className="relative min-h-screen w-full transition-colors duration-700"
         >
-            <div className="absolute inset-0 z-0 opacity-70 pointer-events-none">
+            <style jsx>{`
+                .fixed-bg {
+                    position: fixed;
+                    inset: 0;
+                    z-index: 0;
+                    pointer-events: none;
+                }
+
+                .cable-energy {
+                    fill: none;
+                    stroke-width: 2.5;
+                    stroke-dasharray: 80 320;
+                    animation:
+                        flow linear infinite,
+                        pulse 0.5s ease-in-out infinite alternate;
+                }
+
+                @keyframes flow {
+                    from {
+                        stroke-dashoffset: 400;
+                    }
+                    to {
+                        stroke-dashoffset: 0;
+                    }
+                }
+
+                @keyframes pulse {
+                    0% {
+                        opacity: 0.4;
+                        filter: drop-shadow(0 0 2px ${energyColor});
+                    }
+                    100% {
+                        opacity: 1;
+                        filter: drop-shadow(0 0 5px ${energyColor})
+                            brightness(1.3);
+                    }
+                }
+            `}</style>
+
+            <div className="fixed-bg opacity-70">
                 <svg
                     className="h-full w-full"
                     viewBox="0 0 1000 1000"
                     preserveAspectRatio="xMidYMid slice"
-                    xmlns="http://www.w3.org/2000/svg"
                 >
-                    <defs>
-                        <filter
-                            id="energyGlow"
-                            x="-50%"
-                            y="-50%"
-                            width="200%"
-                            height="200%"
-                        >
-                            <feGaussianBlur stdDeviation="3" result="blur" />
-                            <feMerge>
-                                <feMergeNode in="blur" />
-                                <feMergeNode in="SourceGraphic" />
-                            </feMerge>
-                        </filter>
-                        <linearGradient
-                            id="energyGrad"
-                            x1="0%"
-                            y1="0%"
-                            x2="100%"
-                            y2="0%"
-                        >
-                            <stop offset="0%" stopColor="transparent" />
-                            <stop offset="50%" stopColor={energyColor} />
-                            <stop offset="100%" stopColor="transparent" />
-                        </linearGradient>
-                    </defs>
-
-                    {Array.from({ length: rows + 1 }).map((_, i) => (
-                        <line
-                            key={`h-${i}`}
-                            x1="0"
-                            y1={i * cellSize}
-                            x2="1000"
-                            y2={i * cellSize}
-                            stroke={gridColor}
-                            strokeWidth="1"
-                        />
-                    ))}
-                    {Array.from({ length: cols + 1 }).map((_, i) => (
-                        <line
-                            key={`v-${i}`}
-                            x1={i * cellSize}
-                            y1="0"
-                            x2={i * cellSize}
-                            y2="1000"
-                            stroke={gridColor}
-                            strokeWidth="1"
-                        />
-                    ))}
+                    <path
+                        d={Array.from({ length: rows + 1 })
+                            .map(
+                                (_, i) =>
+                                    `M 0 ${i * cellSize} L 1000 ${i * cellSize} M ${i * cellSize} 0 L ${i * cellSize} 1000`,
+                            )
+                            .join(" ")}
+                        stroke={gridColor}
+                        strokeWidth="0.5"
+                        fill="none"
+                    />
                     {isMounted &&
-                        [1, 3, 5, 7, 9, 11, 13, 15, 17, 19].map((rowIdx) =>
-                            [2, 4, 6, 8, 10, 12, 14, 16, 18].map((colIdx) => {
-                                const x = colIdx * cellSize;
-                                const y = rowIdx * cellSize;
-                                const pathData = `M ${x} ${y} L ${x + cellSize} ${y} L ${x + cellSize} ${y + cellSize} L ${x} ${y + cellSize} Z`;
-                                const randomDuration = `${3 + Math.random() * 2}s`;
-
-                                return (
-                                    <g key={`${rowIdx}-${colIdx}`}>
-                                        <path
-                                            d={pathData}
-                                            fill="none"
-                                            stroke="url(#energyGrad)"
-                                            strokeWidth="2"
-                                            strokeDasharray="50 150"
-                                        >
-                                            <animate
-                                                attributeName="stroke-dashoffset"
-                                                from="400"
-                                                to="0"
-                                                dur={randomDuration}
-                                                repeatCount="indefinite"
-                                            />
-                                        </path>
-                                        <circle
-                                            r="2"
-                                            fill={energyColor}
-                                            filter="url(#energyGlow)"
-                                        >
-                                            <animateMotion
-                                                path={pathData}
-                                                dur={randomDuration}
-                                                repeatCount="indefinite"
-                                            />
-                                        </circle>
-                                    </g>
-                                );
-                            }),
-                        )}
+                        energyPaths.map((p) => (
+                            <rect
+                                key={p.id}
+                                x={p.x}
+                                y={p.y}
+                                width={cellSize}
+                                height={cellSize}
+                                stroke={energyColor}
+                                className="cable-energy"
+                                style={{
+                                    animationDuration: `${p.duration}s, 0.5s`,
+                                    animationDelay: `${p.delay}s, ${Math.random()}s`,
+                                }}
+                            />
+                        ))}
                 </svg>
             </div>
+
             <div className="relative z-10 w-full">
                 <HeroSection />
+                <div className="h-[20vh]" />
             </div>
         </div>
     );

@@ -1,8 +1,13 @@
 import { Router } from "express";
 import multer from "multer";
 import fs from "fs";
-import { createBlog, getBlogById } from "../controllers/blog-controller";
-import { protectAdmin } from "../middleware/auth-middleware";
+import {
+    createBlog,
+    deleteBlog,
+    getBlogById,
+    getBlogs,
+    updateBlog,
+} from "../controllers/blog-controller";
 
 const router = Router();
 
@@ -18,7 +23,10 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-router.post("/", protectAdmin, upload.array("images", 10), createBlog);
+router.post("/", upload.array("images", 10), createBlog);
 router.get("/:id", getBlogById);
+router.delete("/:id", deleteBlog);
+router.put("/:id", upload.array("images", 10), updateBlog);
+router.get("/", getBlogs);
 
 export default router;

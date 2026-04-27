@@ -11,6 +11,7 @@ const BlogSchema: Schema = new Schema({
     title: { type: String, required: true },
     description: { type: String },
     images: [String],
+    imageDescriptions: { type: [String], default: [] },
     createdAt: { type: Date, default: Date.now },
 });
 
