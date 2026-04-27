@@ -7,6 +7,7 @@ export const createBlog = async (req: Request, res: Response) => {
         const { title, description, imageDescriptions } = req.body;
         const files = (req.files as Express.Multer.File[]) || [];
         const imageUrls = files.map((file) => `/uploads/${file.filename}`);
+
         let parsedDescriptions: string[] = [];
         if (imageDescriptions) {
             try {
@@ -19,6 +20,7 @@ export const createBlog = async (req: Request, res: Response) => {
                 parsedDescriptions = [];
             }
         }
+
         const newBlog = new blog({
             title,
             description: description || "",
@@ -27,9 +29,8 @@ export const createBlog = async (req: Request, res: Response) => {
         });
         const savedBlog = await newBlog.save();
         const blogId = savedBlog._id.toString();
-        const SERVER_IP = "192.168.0.160";
-        const FRONTEND_PORT = "3000";
-        const clientUrl = `http://${SERVER_IP}:${FRONTEND_PORT}/obyekt/${blogId}`;
+        const clientUrl = `https://qurulish-firma.vercel.app/obyekt/${blogId}`;
+
         const qrCodeImage = await QRCode.toDataURL(clientUrl, {
             width: 400,
             margin: 2,
@@ -38,6 +39,7 @@ export const createBlog = async (req: Request, res: Response) => {
                 light: "#ffffff",
             },
         });
+
         res.status(201).json({
             success: true,
             data: {
@@ -87,6 +89,7 @@ export const getBlogById = async (req: Request, res: Response) => {
         });
     }
 };
+
 export const deleteBlog = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
