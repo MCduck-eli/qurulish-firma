@@ -2,6 +2,8 @@
 import { useEffect, useState, use } from "react";
 import axios from "axios";
 
+const BASE_URL = "https://qurulish-firma.onrender.com";
+
 export default function ObyektView({
     params,
 }: {
@@ -13,9 +15,6 @@ export default function ObyektView({
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const SERVER_IP = "192.168.0.160";
-    const PORT = "5001";
-    const BASE_URL = `http://${SERVER_IP}:${PORT}`;
 
     useEffect(() => {
         if (!id) return;
@@ -23,18 +22,21 @@ export default function ObyektView({
         const fetchData = async () => {
             try {
                 const res = await axios.get(`${BASE_URL}/api/blogs/${id}`, {
-                    timeout: 5000,
+                    timeout: 10000,
                 });
+
                 if (res.data && res.data.success) {
                     setData(res.data.data);
                 } else {
                     setError("Obyekt topilmadi");
                 }
             } catch (err: any) {
+                console.error("Xatolik tafsiloti:", err);
                 setError(
-                    err.message === "Network Error"
-                        ? "Backend bilan aloqa yo'q"
-                        : err.message,
+                    err.response?.data?.message ||
+                        (err.message === "Network Error"
+                            ? "Backend bilan aloqa yo'q (Render uyg'onmoqda bo'lishi mumkin)"
+                            : err.message),
                 );
             } finally {
                 setLoading(false);
@@ -42,18 +44,28 @@ export default function ObyektView({
         };
 
         fetchData();
-    }, [id, BASE_URL]);
+    }, [id]);
 
     if (loading)
         return (
-            <div className="p-10 text-center font-bold dark:text-white">
-                Yuklanmoqda...
+            <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                <span className="ml-3 font-bold dark:text-white">
+                    Yuklanmoqda...
+                </span>
             </div>
         );
+
     if (error)
         return (
-            <div className="p-10 text-center text-red-500 font-bold dark:bg-gray-900 h-screen">
-                Xato: {error}
+            <div className="p-10 text-center text-red-500 font-bold dark:bg-gray-900 h-screen flex flex-col items-center justify-center">
+                <p className="mb-4 text-xl">Xato: {error}</p>
+                <button
+                    onClick={() => window.location.reload()}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+                >
+                    Qayta urinish
+                </button>
             </div>
         );
 

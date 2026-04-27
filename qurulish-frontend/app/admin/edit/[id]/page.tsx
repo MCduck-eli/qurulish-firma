@@ -4,11 +4,13 @@ import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
 import toast, { Toaster } from "react-hot-toast";
 
+const BASE_URL = "https://qurulish-firma.onrender.com";
 interface ImageItem {
     preview: string;
     description: string;
     file?: File;
 }
+
 export default function EditPage({
     params,
 }: {
@@ -19,6 +21,7 @@ export default function EditPage({
     const [mainDescription, setMainDescription] = useState("");
     const [imageItems, setImageItems] = useState<ImageItem[]>([]);
     const router = useRouter();
+
     useEffect(() => {
         api.get(`/blogs/${id}`)
             .then((res) => {
@@ -50,6 +53,7 @@ export default function EditPage({
             setImageItems((prev) => [...prev, ...filesArray]);
         }
     };
+
     const updateImageDescription = (index: number, text: string) => {
         const updatedItems = [...imageItems];
         updatedItems[index].description = text;
@@ -154,7 +158,7 @@ export default function EditPage({
                             <img
                                 src={
                                     item.preview.startsWith("/")
-                                        ? `http://192.168.0.160:5001${item.preview}`
+                                        ? `${BASE_URL}${item.preview}`
                                         : item.preview
                                 }
                                 className="w-16 h-16 object-cover rounded"
